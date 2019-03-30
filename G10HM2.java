@@ -1,11 +1,14 @@
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaPairRDD;//add this import for the JavaPair
 import org.apache.spark.api.java.JavaSparkContext;
-
+import java.util.HashMap;//add for the HashMap
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Map;// add for Map
+import scala.Tuple2;// add for Tuple2
 
 public class G10HM2 {
 

@@ -66,15 +66,18 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                // Reduce phase
-                .groupByKey()
-                .mapValues((it) -> {
-                  long sum = 0;
-                  for (long c : it) {
-                    sum += c;
-                  }
-                  return sum;
-                });
+                // Reduce phase with reduceByKey method, with this method the word count is done in 2187ms
+                .reduceByKey((x,y)->x+y);
+                
+                //Reduce phase with groupByKey method, this method take 3271ms
+                //.groupByKey()
+                //.mapValues((it) -> { //this method requires also a mapValues
+                //long sum = 0;
+                //for (long c : it) {
+                //  sum += c;
+                //}
+                //return sum;
+                //});
 
         System.out.println("Improved Word Count 1 found: " + wordcountpairs.count() + " unique words");
         long end1 = System.currentTimeMillis();

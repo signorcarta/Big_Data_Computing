@@ -1,11 +1,14 @@
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaPairRDD;//add this import for the JavaPair
 import org.apache.spark.api.java.JavaSparkContext;
-
+import java.util.HashMap;//add for the HashMap
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Map;// add for Map
+import scala.Tuple2;// add for Tuple2
 
 public class G10HM2 {
 
@@ -63,15 +66,18 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                // Reduce phase
-                .groupByKey()
-                .mapValues((it) -> {
-                  long sum = 0;
-                  for (long c : it) {
-                    sum += c;
-                  }
-                  return sum;
-                });
+                // Reduce phase with reduceByKey method, with this method the word count is done in 2187ms
+                .reduceByKey((x,y)->x+y);
+                
+                //Reduce phase with groupByKey method, this method take 3271ms
+                //.groupByKey()
+                //.mapValues((it) -> { //this method requires also a mapValues
+                //long sum = 0;
+                //for (long c : it) {
+                //  sum += c;
+                //}
+                //return sum;
+                //});
 
         System.out.println("Improved Word Count 1 found: " + wordcountpairs.count() + " unique words");
         long end1 = System.currentTimeMillis();

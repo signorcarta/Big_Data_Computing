@@ -24,19 +24,15 @@ public class G10HM2 {
                 .setAppName("Preliminaries");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        /*
-        Reads the collection of documents into an RDD docs.
-        [ Note that if a path to a directory rather than to
-        a file is passed to textFile, it will load all files
-        found in the directory into the RDD. ]
-         */
+        //Reads the collection of documents into an RDD named docs.
         JavaRDD<String> docs = sc.textFile(args[0]).cache();
+
         //Subdivides the collection into K partitions;
         docs.repartition(k);
 
         /*
         We want to exclude the time to load the text file
-        from our measurements. To do so we need to force the
+        from our measurements. To do, so we need to force the
         loading to happen before the stopwatch is started so that
         our measure will be accurate.
         */
@@ -67,7 +63,7 @@ public class G10HM2 {
 
                 /*
                 Reduce phase.
-                With reduceByKey() method, the word count is computed in 2187ms
+                With the reduceByKey() method, the word count is computed in 2187ms
                 */
 
                 .reduceByKey((x,y)->x+y);
@@ -91,7 +87,7 @@ public class G10HM2 {
 
 
 
-        //IMPROVED WORDCOUNT 2.1________________________________________________________
+        //IMPROVED WORDCOUNT 2.1_________________________________________________________
 
         long start2 = System.currentTimeMillis();
 
@@ -110,7 +106,7 @@ public class G10HM2 {
                     }
                     return pairs.iterator();
                 })
-                .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k)) //it contains (x,(w,c(w)))
+                .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k)) //"it" contains (x,(w,c(w)))
 
                 //Reduce_1
                 .flatMapToPair((pairsByNumKey) -> {
@@ -127,7 +123,7 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                //Map_2 (Identity)
+                //Map_2: Identity
 
                 //Reduce_2
                 .reduceByKey((x,y) -> x+y);
@@ -139,7 +135,7 @@ public class G10HM2 {
 
 
 
-        //IMPROVED WORDCOUNT 2.2________________________________________________________
+        //IMPROVED WORDCOUNT 2.2_________________________________________________________
         long start3 = System.currentTimeMillis();
 
         JavaPairRDD<String,Long> wordcount3 = docs
@@ -189,43 +185,36 @@ public class G10HM2 {
 
 
 
-        /*COMPUTING THE AVERAGE WORD OCCURRENCE__________________________________________
+        //COMPUTING THE AVERAGE WORD LENGTH______________________________________________
+
+        long start4 = System.currentTimeMillis();
 
         JavaPairRDD<String,Long> wordcount4 = docs
                 //Map_1
                 .flatMapToPair((document) -> {
-                            String[] tokens = document.split(" ");
-                            HashMap<String, Long> wordLength = new HashMap();
-                            ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
+                    String[] tokens = document.split(" ");
+                    HashMap<String, Long> wordLength = new HashMap();
+                    ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
+                    for (String token : tokens) {
+                        wordLength.put(token, (long) token.length());
+                    }
+                    for (Map.Entry<String, Long> e : wordLength.entrySet()) {
+                        pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
+                    }
+                    return pairs.iterator();
+                })
+                .distinct();
+        // the RDD is now formed by (word, wordlength)
+        long average = (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
 
-                            for (String token : tokens) {
-                                wordLength.put(token, (long) token.length());
-                            }
+        System.out.println("The average word length is: " + average);
+        long end4 = System.currentTimeMillis();
+        System.out.println("Elapsed time " + (end4 - start4) + " ms");
 
-                            for (Map.Entry<String, Long> e : wordLength.entrySet()) {
-                                pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
-                            }
+        //_____________________________________________________________________________
 
-                            return pairs.iterator();
-                });
-
-        for (Map.Entry<String, Long> e : wordcount4.entrySet()){
-
-        }
-
-
-
-
-
-
-        long average = wordcount4.reduce((x,y)->(x._2 + y._2)) / wordcount3.count();
-
-        //_____________________________________________________________________________*/
-
-        //The following lines have to be the last part of the main method
         System.out.println("Press enter to finish");
         System.in.read();
 
     }
 }
-

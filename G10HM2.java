@@ -21,8 +21,9 @@ public class G10HM2 {
 
         // Setup Spark
         SparkConf conf = new SparkConf(true)
-                .setAppName("Preliminaries");
+                .setAppName("Word Count");
         JavaSparkContext sc = new JavaSparkContext(conf);
+        sc.setLogLevel("ERROR");
 
         //Reads the collection of documents into an RDD named docs.
         JavaRDD<String> docs = sc.textFile(args[0]).cache();
@@ -40,7 +41,7 @@ public class G10HM2 {
 
 
 
-        //IMPROVED WORDCOUNT 1________________________________________________________
+        //IMPROVED WORDCOUNT 1_________________________________________________________________________________________
 
         long start1 = System.currentTimeMillis();
 
@@ -80,14 +81,16 @@ public class G10HM2 {
                 });
                 */
 
+
+
         System.out.println("Improved Word Count 1 found: " + wordcount1.count() + " unique words");
         long end1 = System.currentTimeMillis();
-        System.out.println("Elapsed time " + (end1 - start1) + " ms");
-        //_______________________________________________________________________________
+        System.out.println("Elapsed time " + (end1 - start1) + " ms" + "\n");
+        //_____________________________________________________________________________________________________________
 
 
 
-        //IMPROVED WORDCOUNT 2.1_________________________________________________________
+        //IMPROVED WORDCOUNT 2.1_______________________________________________________________________________________
 
         long start2 = System.currentTimeMillis();
 
@@ -115,7 +118,7 @@ public class G10HM2 {
                     for (Tuple2<String, Long> pair : pairsByNumKey._2){
                         String word = pair._1;
                         Long counter = pair._2;
-                        counts.put(word.toLowerCase(), counter + counts.getOrDefault(word.toLowerCase(), 0L));
+                        counts.put(word, counter + counts.getOrDefault(word, 0L));
                     }
                     for(Map.Entry<String, Long> e : counts.entrySet()){
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
@@ -128,14 +131,16 @@ public class G10HM2 {
                 //Reduce_2
                 .reduceByKey((x,y) -> x+y);
 
+
+
         System.out.println("Improved Word Count 2.1 found: " + wordcount2.count() + " different words");
         long end2 = System.currentTimeMillis();
-        System.out.println("Elapsed time " + (end2 - start2) + " ms");
-        //_______________________________________________________________________________
+        System.out.println("Elapsed time " + (end2 - start2) + " ms" + "\n");
+        //_____________________________________________________________________________________________________________
 
 
 
-        //IMPROVED WORDCOUNT 2.2_________________________________________________________
+        //IMPROVED WORDCOUNT 2.2_______________________________________________________________________________________
         long start3 = System.currentTimeMillis();
 
         JavaPairRDD<String,Long> wordcount3 = docs
@@ -146,7 +151,7 @@ public class G10HM2 {
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
                     //we have added toLowerCase to be not case sensitive
                     for (String token : tokens) {
-                        counts.put(token.toLowerCase(), 1L + counts.getOrDefault(token.toLowerCase(), 0L));
+                        counts.put(token, 1L + counts.getOrDefault(token, 0L));
                     }
                     for (Map.Entry<String, Long> e : counts.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
@@ -165,7 +170,7 @@ public class G10HM2 {
                         Tuple2<String, Long> pair = it.next();
                         String word = pair._1;
                         Long counter = pair._2;
-                        counts.put(word.toLowerCase(), counter + counts.getOrDefault(word.toLowerCase(), 0L));
+                        counts.put(word, counter + counts.getOrDefault(word, 0L));
                     }
                     for(Map.Entry<String, Long> e : counts.entrySet()){
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
@@ -178,14 +183,16 @@ public class G10HM2 {
                 //Reduce_2
                 .reduceByKey((x,y) -> x+y);
 
+
+
         System.out.println("Improved Word Count 2.2 found: " + wordcount3.count() + " different words");
         long end3 = System.currentTimeMillis();
-        System.out.println("Elapsed time " + (end3 - start3) + " ms");
-        //_______________________________________________________________________________
+        System.out.println("Elapsed time " + (end3 - start3) + " ms" + "\n");
+        //_____________________________________________________________________________________________________________
 
 
 
-        //COMPUTING THE AVERAGE WORD LENGTH______________________________________________
+        //COMPUTING THE AVERAGE WORD LENGTH____________________________________________________________________________
 
         long start4 = System.currentTimeMillis();
 
@@ -205,13 +212,15 @@ public class G10HM2 {
                 })
                 .distinct();
         // the RDD is now formed by (word, wordlength)
-        long average = (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
+        double average = (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
+
+
 
         System.out.println("The average word length is: " + average);
         long end4 = System.currentTimeMillis();
-        System.out.println("Elapsed time " + (end4 - start4) + " ms");
+        System.out.println("Elapsed time " + (end4 - start4) + " ms" + "\n");
 
-        //_____________________________________________________________________________
+        //_____________________________________________________________________________________________________________
 
         System.out.println("Press enter to finish");
         System.in.read();

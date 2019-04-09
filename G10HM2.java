@@ -28,8 +28,6 @@ public class G10HM2 {
         //Reads the collection of documents into an RDD named docs.
         JavaRDD<String> docs = sc.textFile(args[0]).cache();
 
-        //Subdivides the collection into K partitions;
-        docs.repartition(k);
 
         /*
         We want to exclude the time to load the text file
@@ -47,14 +45,14 @@ public class G10HM2 {
 
         JavaPairRDD<String, Long> wordcount1 = docs
 
-                // Map phase.
+                // Map phase
                 .flatMapToPair((document) -> {
                     String[] tokens = document.split(" ");
                     HashMap<String, Long> counts = new HashMap<>();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
 
                     for (String token : tokens) {
-                        counts.put(token, 1L + counts.getOrDefault(token, 0L));
+                        counts.put(token, 1L + counts.getOrDefault(token, 0L)); //need comments here?
                     }
                     for (Map.Entry<String, Long> e : counts.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
@@ -109,13 +107,13 @@ public class G10HM2 {
                     }
                     return pairs.iterator();
                 })
-                .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k)) //"it" contains (x,(w,c(w)))
-
-                //Reduce_1
+                .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k)) //we use group by for assign random keys from 0 to k
+                // The RDD is now composed by (x,<w,c(w)>)
+                //Reduce_1 in this reduce phase we want to sum the occurencies for every partition x
                 .flatMapToPair((pairsByNumKey) -> {
                     HashMap<String, Long> counts = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-                    for (Tuple2<String, Long> pair : pairsByNumKey._2){
+                    for (Tuple2<String, Long> pair : pairsByNumKey._2){ //with pairsByNumKey._2 we access to the value, which is <w,c(w)>
                         String word = pair._1;
                         Long counter = pair._2;
                         counts.put(word, counter + counts.getOrDefault(word, 0L));
@@ -129,7 +127,7 @@ public class G10HM2 {
                 //Map_2: Identity
 
                 //Reduce_2
-                .reduceByKey((x,y) -> x+y);
+                .reduceByKey((x,y) -> x+y); // now we obtain the total count
 
 
 
@@ -149,7 +147,6 @@ public class G10HM2 {
                     String[] tokens = document.split(" ");
                     HashMap<String, Long> counts = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-                    //we have added toLowerCase to be not case sensitive
                     for (String token : tokens) {
                         counts.put(token, 1L + counts.getOrDefault(token, 0L));
                     }
@@ -160,7 +157,7 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                .repartition(k)
+                .repartition(k) //this time we use a repartition method offered by spark
 
                 //Reduce_1
                 .mapPartitionsToPair((it) -> {
@@ -212,7 +209,7 @@ public class G10HM2 {
                 })
                 .distinct();
         // the RDD is now formed by (word, wordlength)
-        double average = (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
+        Double average = (double) (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
 
 
 

@@ -60,10 +60,7 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                /*
-                Reduce phase.
-                With the reduceByKey() method, the word count is computed in 2187ms
-                */
+                //Reduce phase
 
                 .reduceByKey((x,y)->x+y);
 
@@ -85,7 +82,10 @@ public class G10HM2 {
         long end1 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end1 - start1) + " ms" + "\n");
         //_____________________________________________________________________________________________________________
-
+        /* NOTES TO IMPROVED WORDCOUNT 1
+        the Elapsed time for this wordcount is 2339 ms and is the fastest method we tested, let Spark manage the load
+        is the best choice
+         */
 
 
         //IMPROVED WORDCOUNT 2.1_______________________________________________________________________________________
@@ -105,10 +105,10 @@ public class G10HM2 {
                     for (Map.Entry<String, Long> e : counts.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
                     }
-                    return pairs.iterator();
+                    return pairs.iterator(); // the RDD is now composed by the Key-Value pair (w,c(w))
                 })
                 .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k)) //we use group by for assign random keys from 0 to k
-                // The RDD is now composed by (x,<w,c(w)>)
+                // The RDD is now composed by (x,(w,c(w)))
                 //Reduce_1 in this reduce phase we want to sum the occurencies for every partition x
                 .flatMapToPair((pairsByNumKey) -> {
                     HashMap<String, Long> counts = new HashMap();
@@ -135,7 +135,10 @@ public class G10HM2 {
         long end2 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end2 - start2) + " ms" + "\n");
         //_____________________________________________________________________________________________________________
-
+        /* NOTES TO IMPROVED WORDCOUNT 2.1
+        the Elapsed time for this wordcount is 4968 ms and is the slowest method we tested, seems that assigning manually
+        the random keys is not the best computational choice
+         */
 
 
         //IMPROVED WORDCOUNT 2.2_______________________________________________________________________________________
@@ -163,7 +166,7 @@ public class G10HM2 {
                 .mapPartitionsToPair((it) -> {
                     HashMap<String, Long> counts = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-                    while (it.hasNext()){
+                    while (it.hasNext()){ //similarly to before w now access directly to the couple (w,c(w)) in every partition for calculate the intermediate sum
                         Tuple2<String, Long> pair = it.next();
                         String word = pair._1;
                         Long counter = pair._2;
@@ -178,7 +181,7 @@ public class G10HM2 {
                 //Map_2 (Identity)
 
                 //Reduce_2
-                .reduceByKey((x,y) -> x+y);
+                .reduceByKey((x,y) -> x+y); //summing all the intermidiate sums
 
 
 
@@ -186,7 +189,10 @@ public class G10HM2 {
         long end3 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end3 - start3) + " ms" + "\n");
         //_____________________________________________________________________________________________________________
-
+        /* NOTES TO IMPROVED WORDCOUNT 2.2
+        the Elapsed time for this wordcount is 3871 ms and yelds better perfomance than the wordcount 2.1, still not as
+        good as the wordcount 1
+         */
 
 
         //COMPUTING THE AVERAGE WORD LENGTH____________________________________________________________________________
@@ -196,22 +202,24 @@ public class G10HM2 {
         JavaPairRDD<String,Long> wordcount4 = docs
                 //Map_1
                 .flatMapToPair((document) -> {
-                    String[] tokens = document.split(" ");
+                    String[] tokens = document.split(" "); //again we are using hash maps for add the words in the RDD with their relative length
                     HashMap<String, Long> wordLength = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
                     for (String token : tokens) {
-                        wordLength.put(token, (long) token.length());
+                        wordLength.put(token, (long) token.length()); //token.length() returns the length of the word
                     }
                     for (Map.Entry<String, Long> e : wordLength.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
                     }
                     return pairs.iterator();
                 })
-                .distinct();
+                .distinct(); //this method ensures are that no repetition in the whole RDD occurs
         // the RDD is now formed by (word, wordlength)
+
+        //Reduce_1
         Double average = (double) (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
-
-
+        // the method .values() return the values of an RDD then we can sum up all the values with the well known method .reduce
+        // then we just divide the sum obtained by the total number of different words
 
         System.out.println("The average word length is: " + average);
         long end4 = System.currentTimeMillis();

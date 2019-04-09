@@ -28,7 +28,6 @@ public class G10HM2 {
         //Reads the collection of documents into an RDD named docs.
         JavaRDD<String> docs = sc.textFile(args[0]).cache();
 
-
         /*
         We want to exclude the time to load the text file
         from our measurements. To do, so we need to force the
@@ -52,7 +51,7 @@ public class G10HM2 {
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
 
                     for (String token : tokens) {
-                        counts.put(token, 1L + counts.getOrDefault(token, 0L)); //need comments here?
+                        counts.put(token, 1L + counts.getOrDefault(token, 0L));
                     }
                     for (Map.Entry<String, Long> e : counts.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
@@ -81,11 +80,14 @@ public class G10HM2 {
         System.out.println("Improved Word Count 1 found: " + wordcount1.count() + " unique words");
         long end1 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end1 - start1) + " ms" + "\n");
+
+        /*
+           NOTES TO IMPROVED WORDCOUNT 1
+           Improved wordcount 1 is the fastest method we tested, letting Spark manage the load is the best choice
+        */
+
         //_____________________________________________________________________________________________________________
-        /* NOTES TO IMPROVED WORDCOUNT 1
-        the Elapsed time for this wordcount is 2339 ms and is the fastest method we tested, let Spark manage the load
-        is the best choice
-         */
+
 
 
         //IMPROVED WORDCOUNT 2.1_______________________________________________________________________________________
@@ -107,13 +109,17 @@ public class G10HM2 {
                     }
                     return pairs.iterator(); // the RDD is now composed by the Key-Value pair (w,c(w))
                 })
-                .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k)) //we use group by for assign random keys from 0 to k
+
+                //we use group by to assign random keys from 0 to k
+                .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k))
+
                 // The RDD is now composed by (x,(w,c(w)))
-                //Reduce_1 in this reduce phase we want to sum the occurencies for every partition x
+
+                //Reduce_1: in this reduce phase we want to sum the occurencies for every partition x
                 .flatMapToPair((pairsByNumKey) -> {
                     HashMap<String, Long> counts = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-                    for (Tuple2<String, Long> pair : pairsByNumKey._2){ //with pairsByNumKey._2 we access to the value, which is <w,c(w)>
+                    for (Tuple2<String, Long> pair : pairsByNumKey._2){
                         String word = pair._1;
                         Long counter = pair._2;
                         counts.put(word, counter + counts.getOrDefault(word, 0L));
@@ -127,18 +133,22 @@ public class G10HM2 {
                 //Map_2: Identity
 
                 //Reduce_2
-                .reduceByKey((x,y) -> x+y); // now we obtain the total count
+                .reduceByKey((x,y) -> x+y); // we now have the total count
 
 
 
         System.out.println("Improved Word Count 2.1 found: " + wordcount2.count() + " different words");
         long end2 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end2 - start2) + " ms" + "\n");
+
+        /*
+            NOTES TO IMPROVED WORDCOUNT 2.1
+            Improved wordcount 2.1 is the slowest method we tested, seems that assigning manually the random keys is not
+            the best computational choice
+        */
+
         //_____________________________________________________________________________________________________________
-        /* NOTES TO IMPROVED WORDCOUNT 2.1
-        the Elapsed time for this wordcount is 4968 ms and is the slowest method we tested, seems that assigning manually
-        the random keys is not the best computational choice
-         */
+
 
 
         //IMPROVED WORDCOUNT 2.2_______________________________________________________________________________________
@@ -166,7 +176,11 @@ public class G10HM2 {
                 .mapPartitionsToPair((it) -> {
                     HashMap<String, Long> counts = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
-                    while (it.hasNext()){ //similarly to before w now access directly to the couple (w,c(w)) in every partition for calculate the intermediate sum
+                    /*
+                     similarly to earlier above, w now access directly to the couple (w,c(w)) in every partition to
+                     calculate the intermediate sum
+                    */
+                    while (it.hasNext()){
                         Tuple2<String, Long> pair = it.next();
                         String word = pair._1;
                         Long counter = pair._2;
@@ -188,11 +202,15 @@ public class G10HM2 {
         System.out.println("Improved Word Count 2.2 found: " + wordcount3.count() + " different words");
         long end3 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end3 - start3) + " ms" + "\n");
-        //_____________________________________________________________________________________________________________
-        /* NOTES TO IMPROVED WORDCOUNT 2.2
-        the Elapsed time for this wordcount is 3871 ms and yelds better perfomance than the wordcount 2.1, still not as
-        good as the wordcount 1
+
+        /*
+            NOTES TO IMPROVED WORDCOUNT 2.2
+            Improved wordcount 2.2 yields better performance than the wordcount 2.1, still not as good as the
+            wordcount 1
          */
+
+        //_____________________________________________________________________________________________________________
+
 
 
         //COMPUTING THE AVERAGE WORD LENGTH____________________________________________________________________________
@@ -202,24 +220,29 @@ public class G10HM2 {
         JavaPairRDD<String,Long> wordcount4 = docs
                 //Map_1
                 .flatMapToPair((document) -> {
-                    String[] tokens = document.split(" "); //again we are using hash maps for add the words in the RDD with their relative length
+                    String[] tokens = document.split(" ");
                     HashMap<String, Long> wordLength = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
                     for (String token : tokens) {
-                        wordLength.put(token, (long) token.length()); //token.length() returns the length of the word
+                        wordLength.put(token, (long) token.length());
                     }
                     for (Map.Entry<String, Long> e : wordLength.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
                     }
                     return pairs.iterator();
                 })
-                .distinct(); //this method ensures are that no repetition in the whole RDD occurs
+                .distinct(); //this method ensures that there is no repetition in the whole RDD.
+
         // the RDD is now formed by (word, wordlength)
 
-        //Reduce_1
+        //Reduce_1.
+        /*
+        The method .values() returns the values of an RDD, that has structure (key, value)). Then we sum up
+        all the values with method .reduce(). In the end we divide the sum obtained by the total
+        number of different words.
+        */
         Double average = (double) (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
-        // the method .values() return the values of an RDD then we can sum up all the values with the well known method .reduce
-        // then we just divide the sum obtained by the total number of different words
+
 
         System.out.println("The average word length is: " + average);
         long end4 = System.currentTimeMillis();
@@ -232,3 +255,5 @@ public class G10HM2 {
 
     }
 }
+
+

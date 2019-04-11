@@ -17,7 +17,7 @@ public class G10HM2 {
         }
 
         //Gets the number of partition, which is given in input
-        int k = Integer.parseInt(args[1]);
+        int k = Integer.parseInt(args[0]);
 
         // Setup Spark
         SparkConf conf = new SparkConf(true)
@@ -26,7 +26,7 @@ public class G10HM2 {
         sc.setLogLevel("ERROR");
 
         //Reads the collection of documents into an RDD named docs.
-        JavaRDD<String> docs = sc.textFile(args[0]).repartition(k).cache();
+        JavaRDD<String> docs = sc.textFile(args[1]).repartition(k).cache();
 
         /*
         We want to exclude the time to load the text file
@@ -73,10 +73,9 @@ public class G10HM2 {
                 });
                 */
 
-
+        long end1 = System.currentTimeMillis();
 
         System.out.println("Improved Word Count 1 found: " + wordcount1.count() + " unique words");
-        long end1 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end1 - start1) + " ms" + "\n");
 
         /*
@@ -133,10 +132,9 @@ public class G10HM2 {
                 //Reduce_2
                 .reduceByKey((x,y) -> x+y); // we now have the total count
 
-
+        long end2 = System.currentTimeMillis();
 
         System.out.println("Improved Word Count 2.1 found: " + wordcount2.count() + " different words");
-        long end2 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end2 - start2) + " ms" + "\n");
 
         /*
@@ -193,12 +191,11 @@ public class G10HM2 {
                 //Map_2 (Identity)
 
                 //Reduce_2
-                .reduceByKey((x,y) -> x+y); //summing all the intermidiate sums
+                .reduceByKey((x,y) -> x+y); //summing all the intermediate sums
 
-
+        long end3 = System.currentTimeMillis();
 
         System.out.println("Improved Word Count 2.2 found: " + wordcount3.count() + " different words");
-        long end3 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end3 - start3) + " ms" + "\n");
 
         /*
@@ -241,9 +238,9 @@ public class G10HM2 {
         */
         Double average = (double) (wordcount4.values().reduce((x,y) -> (x+y))) / wordcount4.count();
 
+        long end4 = System.currentTimeMillis();
 
         System.out.println("The average word length is: " + average);
-        long end4 = System.currentTimeMillis();
         System.out.println("Elapsed time " + (end4 - start4) + " ms" + "\n");
 
         //_____________________________________________________________________________________________________________
@@ -253,6 +250,11 @@ public class G10HM2 {
 
     }
 }
+
+
+
+
+
 
 
 

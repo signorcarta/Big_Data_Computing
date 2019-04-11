@@ -26,7 +26,7 @@ public class G10HM2 {
         sc.setLogLevel("ERROR");
 
         //Reads the collection of documents into an RDD named docs.
-        JavaRDD<String> docs = sc.textFile(args[1]).repartition(k).cache();
+        JavaRDD<String> docs = sc.textFile(args[1]).cache();
 
         /*
         We want to exclude the time to load the text file
@@ -35,6 +35,8 @@ public class G10HM2 {
         our measure will be accurate.
         */
         docs.count();
+
+        docs.repartition(k);
 
         //IMPROVED WORDCOUNT 1_________________________________________________________________________________________
 
@@ -166,7 +168,7 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                .repartition(k) //this time we use a repartition method offered by spark
+                //.repartition(k) //this time we use a repartition method offered by spark
 
                 //Reduce_1
                 .mapPartitionsToPair((it) -> {
@@ -250,13 +252,6 @@ public class G10HM2 {
 
     }
 }
-
-
-
-
-
-
-
 
 
 

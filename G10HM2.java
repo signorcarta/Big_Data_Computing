@@ -36,6 +36,7 @@ public class G10HM2 {
         */
         docs.count();
 
+        // Now we partition the RDD in K different partitions
         docs.repartition(k);
 
         //IMPROVED WORDCOUNT 1_________________________________________________________________________________________
@@ -44,7 +45,7 @@ public class G10HM2 {
 
         JavaPairRDD<String, Long> wordcount1 = docs
 
-                // Map phase
+                // Map phase - read in the documents the diferent occurencies for each word
                 .flatMapToPair((document) -> {
                     String[] tokens = document.split(" ");
                     HashMap<String, Long> counts = new HashMap<>();
@@ -58,13 +59,13 @@ public class G10HM2 {
                     }
                     return pairs.iterator();
                 })
-
-                //Reduce phase
-
+                // The key value pair is now (Word, Occurrencies)
+                //Reduce phase - sum all the occuriences
+                
                 .reduceByKey((x,y)->x+y);
 
                 /*
-                [Reduce phase with groupByKey() method, takes 3271ms]
+                [Alternative reduce phase with groupByKey() method, elapsed time is longer then reduceByKey method]
                 .groupByKey()
                 .mapValues((it) -> { //this method requires also a mapValues
                 long sum = 0;
@@ -82,7 +83,8 @@ public class G10HM2 {
 
         /*
            NOTES TO IMPROVED WORDCOUNT 1
-           Improved wordcount 1 is the fastest method we tested, letting Spark manage the load is the best choice
+           Improved wordcount 1 is the second fastest method we tested.
+           Letting Spark manage the load through the repartion method is a good choice
         */
 
         //_____________________________________________________________________________________________________________
@@ -94,7 +96,7 @@ public class G10HM2 {
         long start2 = System.currentTimeMillis();
 
         JavaPairRDD<String, Long> wordcount2 = docs
-                //Map_1
+                //Map_1 - Counting the occurencies in each document, but now the key-value pair are randomly assigned to partitions
                 .flatMapToPair((document) -> {
                     String[] tokens = document.split(" ");
                     HashMap<String, Long> counts = new HashMap<>();
@@ -106,13 +108,13 @@ public class G10HM2 {
                     for (Map.Entry<String, Long> e : counts.entrySet()) {
                         pairs.add(new Tuple2<>(e.getKey(), e.getValue()));
                     }
-                    return pairs.iterator(); // the RDD is now composed by the Key-Value pair (w,c(w))
+                    return pairs.iterator(); // the RDD is now composed by the Key-Value pair (word, occurencies)
                 })
 
                 //we use group by to assign random keys from 0 to k
                 .groupBy(it -> ThreadLocalRandom.current().nextInt(0, k))
 
-                // The RDD is now composed by (x,(w,c(w)))
+                // The RDD is now composed by (random key x,(word,occurencies))
 
                 //Reduce_1: in this reduce phase we want to sum the occurencies for every partition x
                 .flatMapToPair((pairsByNumKey) -> {
@@ -153,7 +155,7 @@ public class G10HM2 {
         long start3 = System.currentTimeMillis();
 
         JavaPairRDD<String,Long> wordcount3 = docs
-                //Map_1
+                //Map_1 - same to the first map phase of Improved WordCount 2.1
                 .flatMapToPair((document) -> {
                     String[] tokens = document.split(" ");
                     HashMap<String, Long> counts = new HashMap();
@@ -168,14 +170,12 @@ public class G10HM2 {
                     return pairs.iterator();
                 })
 
-                //.repartition(k) //this time we use a repartition method offered by spark
-
                 //Reduce_1
                 .mapPartitionsToPair((it) -> {
                     HashMap<String, Long> counts = new HashMap();
                     ArrayList<Tuple2<String, Long>> pairs = new ArrayList<>();
                     /*
-                     similarly to earlier above, w now access directly to the couple (w,c(w)) in every partition to
+                     similarly to earlier above, we now access directly to the couple (w,c(w)) in every partition to
                      calculate the intermediate sum
                     */
                     while (it.hasNext()){
@@ -202,8 +202,8 @@ public class G10HM2 {
 
         /*
             NOTES TO IMPROVED WORDCOUNT 2.2
-            Improved wordcount 2.2 yields better performance than the wordcount 2.1, still not as good as the
-            wordcount 1
+            Improved wordcount 2.2 is the fastest algorithm we tested, note that we didn't reshuffle the RDD that is still partitioned
+            in k different partitions with the method .repartition(k) used above.
          */
 
         //_____________________________________________________________________________________________________________
@@ -215,7 +215,7 @@ public class G10HM2 {
         long start4 = System.currentTimeMillis();
 
         JavaPairRDD<String,Long> wordcount4 = docs
-                //Map_1
+                //Map_1 - splitting the words for each document and account the wordlength for each word
                 .flatMapToPair((document) -> {
                     String[] tokens = document.split(" ");
                     HashMap<String, Long> wordLength = new HashMap();

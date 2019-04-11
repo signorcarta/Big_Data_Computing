@@ -26,7 +26,7 @@ public class G10HM2 {
         sc.setLogLevel("ERROR");
 
         //Reads the collection of documents into an RDD named docs.
-        JavaRDD<String> docs = sc.textFile(args[0]).cache();
+        JavaRDD<String> docs = sc.textFile(args[0]).repartition(k).cache();
 
         /*
         We want to exclude the time to load the text file
@@ -35,8 +35,6 @@ public class G10HM2 {
         our measure will be accurate.
         */
         docs.count();
-
-
 
         //IMPROVED WORDCOUNT 1_________________________________________________________________________________________
 
@@ -255,5 +253,9 @@ public class G10HM2 {
 
     }
 }
+
+
+
+
 
 

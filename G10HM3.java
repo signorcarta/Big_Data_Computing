@@ -122,7 +122,7 @@ public class G10HM3 {
         // Contains indexes of cluster belonging, for each point of the dataset
         ArrayList<Integer> partition = new ArrayList<>(P.size());
 
-        //Partition(P, C)__________________________________________________________
+        //Partition(P, C)___________________________________________________
 
         //Cycling over all points considering i-th center
         for(int j=0; j<P.size(); j++){

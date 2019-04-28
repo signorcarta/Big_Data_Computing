@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static org.apache.spark.mllib.linalg.Vectors.dense;
+import static org.apache.spark.mllib.linalg.Vectors.sqdist;
+
 public class G10HM3 {
     //__________________________________________________________________________________________________________________
     public static Vector strToVector(String str) {
@@ -15,7 +18,7 @@ public class G10HM3 {
         for (int i=0; i<tokens.length; i++) {
             data[i] = Double.parseDouble(tokens[i]);
         }
-        return (Vector) Vectors.dense(data);
+        return (Vector) dense(data);
     }
     //__________________________________________________________________________________________________________________
 
@@ -40,9 +43,9 @@ public class G10HM3 {
     public static ArrayList<Vector> kmeansPP( ArrayList<Vector> Pi, ArrayList<Long> WPi, int k, int iter){
 
         //Initializations
-        ArrayList<Vector> P = new ArrayList<Vector>(Pi);
-        ArrayList<Long> WP = new ArrayList<Long>(WPi);
-        ArrayList<Vector> C = new ArrayList<>(k);//Equivalent to S in the slides
+        ArrayList<Vector> P = new ArrayList<Vector>(Pi); //Dataset
+        ArrayList<Long> WP = new ArrayList<Long>(WPi); //Array of weights
+        ArrayList<Vector> C = new ArrayList<Vector>(k);//Equivalent to S in the slides
         ArrayList<Double> curMinDist = new ArrayList<>();
 
         double distSum = 0;
@@ -56,7 +59,7 @@ public class G10HM3 {
         int n = rand.nextInt(P.size());
         //Random point chosen from P
         C.add(P.get(n)); //First center selected
-        P.remove(n); //remove it from the initial set
+        P.remove(n); //Remove it from the initial set
         WP.remove(n);
         //_____________________________________________________________________________________________
 
@@ -67,7 +70,7 @@ public class G10HM3 {
 
             // Compute the distances of each point from the last center
             for (int j = 0; j < P.size(); j++) {
-                double curDist = Math.sqrt(Vectors.sqdist(P.get(j), C.get(i-1)));
+                double curDist = Math.sqrt(sqdist(P.get(j), C.get(i-1)));
 
                 // In the first iteration add the entries, otherwise just modify them
                 if (C.size() == 1) {
@@ -113,12 +116,39 @@ public class G10HM3 {
 
 
         //Refine C with Lloyd's algorithm_______________________________________________________________
-        objFunction = (long) distSum;
-        for(int i=0; i<iter; i++){
+
+        long curDist = 100000000;
+
+        // Contains indexes of cluster belonging, for each point of the dataset
+        ArrayList<Integer> partition = new ArrayList<>(P.size());
+
+        //Partition(P, C)__________________________________________________________
+
+        //Cycling over all points considering i-th center
+        for(int j=0; j<P.size(); j++){
+
+            // Cyclying over all centers
+            for(int i=0; i<C.size(); i++){
+                long thisDist = (long) Vectors.sqdist(C.get(i), P.get(j));
+
+                // Compares previous distance (Point[i] - Center) to current
+                if( thisDist < curDist){
+                    curDist = thisDist;
+                    partition.set(j, i); // Currently assigning the j-th point to cluster number i
+                }
+
+            }
+        }
+        //__________________________________________________________________
 
 
+        //Centroid update___________________________________________________
+
+        for (int j=0; j<P.size(); j++){
+            int curClust = partition.get(0);
         }
 
+        //__________________________________________________________________
 
         //_____________________________________________________________________________________________
         return C; //Returns the initial set of C points [RENAME C WITH C_REFINED] !!!!!!!!!!!!!!!!!!!!!

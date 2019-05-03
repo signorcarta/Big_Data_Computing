@@ -118,18 +118,19 @@ public class G10HM3 {
 
         //Refine C with Lloyd's algorithm_______________________________________________________________
 
-        long curDist = 100000000;
-
         // Contains indexes of cluster belonging, for each point of the dataset
         ArrayList<Integer> partition = new ArrayList<>(P.size());
 
-
         ///////////////////////////////////////////////////////////////////////////////////////////////
         for(int s=0; s<iter; s++) {
+
+
             //Partition(P, C)___________________________________________________
 
             //Cycling over all points considering i-th center
             for (int j = 0; j < P.size(); j++) {
+
+                long curDist = Long.MAX_VALUE;
 
                 // Cyclying over all centers
                 for (int i = 0; i < C.size(); i++) {
@@ -166,7 +167,7 @@ public class G10HM3 {
             }
         }
         ///////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         //__________________________________________________________________
 
         //_____________________________________________________________________________________________
@@ -175,7 +176,7 @@ public class G10HM3 {
     //__________________________________________________________________________________________________________________
 
 
-    /*
+
     //__________________________________________________________________________________________________________________
     public static double kmeansObj(ArrayList<Vector> P, ArrayList<Vector> C) {
         double sumDist = 0;
@@ -199,12 +200,28 @@ public class G10HM3 {
         return sumDist/(P.size());
     }
     //__________________________________________________________________________________________________________________
-    */
+
 
 
     //__________________________________________________________________________________________________________________
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
 
+        //Load the dataset
+        ArrayList<Vector> dataset = readVectorsSeq("thirdDataset.txt");
+
+        //Array of weights initialized to all ones
+        ArrayList<Long> weights = new ArrayList<>();
+        for(int i = 0; i < dataset.size(); i++){
+            weights.add(1L);
+        }
+
+        //Run k-means++
+        ArrayList<Vector> C = kmeansPP(dataset, weights, 20, 30);
+
+        //Run k-means obj
+        double averageDist = kmeansObj(dataset, C);
+
+        System.out.println("Average distance found is: " + averageDist);
     }
     //__________________________________________________________________________________________________________________
 }

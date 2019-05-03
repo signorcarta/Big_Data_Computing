@@ -1,3 +1,4 @@
+import org.apache.spark.mllib.linalg.BLAS;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 
@@ -122,36 +123,54 @@ public class G10HM3 {
         // Contains indexes of cluster belonging, for each point of the dataset
         ArrayList<Integer> partition = new ArrayList<>(P.size());
 
-        //Partition(P, C)___________________________________________________
 
-        //Cycling over all points considering i-th center
-        for(int j=0; j<P.size(); j++){
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        for(int s=0; s<iter; s++) {
+            //Partition(P, C)___________________________________________________
 
-            // Cyclying over all centers
-            for(int i=0; i<C.size(); i++){
-                long thisDist = (long) Vectors.sqdist(C.get(i), P.get(j));
+            //Cycling over all points considering i-th center
+            for (int j = 0; j < P.size(); j++) {
 
-                // Compares previous distance (Point[i] - Center) to current
-                if( thisDist < curDist){
-                    curDist = thisDist;
-                    partition.set(j, i); // Currently assigning the j-th point to cluster number i
+                // Cyclying over all centers
+                for (int i = 0; i < C.size(); i++) {
+                    long thisDist = (long) Vectors.sqdist(C.get(i), P.get(j));
+
+                    // Compares previous distance (Point[i] - Center) to current
+                    if (thisDist < curDist) {
+                        curDist = thisDist;
+                        partition.set(j, i); // Currently assigning the j-th point to cluster number i
+                    }
+
+                }
+            }
+            //__________________________________________________________________
+
+
+            //Centroid update___________________________________________________
+
+            for (int i = 0; i < C.size(); i++) {
+
+                long hmany = 0;
+                Vector sum = null;
+
+                for (int j = 0; j < P.size(); j++) {
+
+                    //access the cluster index of the j-th point of the dataset
+                    if (i == partition.get(j)) {
+                        BLAS.axpy(WP.get(j), sum, P.get(j)); //updates sum
+                        hmany = hmany + WP.get(j); //updates elements count
+                    }
                 }
 
+                BLAS.axpy((1 / hmany), sum, C.get(i)); //new centroid
             }
         }
-        //__________________________________________________________________
-
-
-        //Centroid update___________________________________________________
-
-        for (int j=0; j<P.size(); j++){
-            int curClust = partition.get(0);
-        }
-
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        
         //__________________________________________________________________
 
         //_____________________________________________________________________________________________
-        return C; //Returns the initial set of C points [RENAME C WITH C_REFINED] !!!!!!!!!!!!!!!!!!!!!
+        return C;
     }
     //__________________________________________________________________________________________________________________
 

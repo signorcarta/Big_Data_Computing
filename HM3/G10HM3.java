@@ -206,8 +206,10 @@ public class G10HM3 {
     //__________________________________________________________________________________________________________________
     public static void main(String[] args) throws IOException {
 
+        //Kmeans++ parameters initialization___________________________________
+
         //Load the dataset
-        ArrayList<Vector> dataset = readVectorsSeq("thirdDataset.txt");
+        ArrayList<Vector> dataset = readVectorsSeq(args[0]);
 
         //Array of weights initialized to all ones
         ArrayList<Long> weights = new ArrayList<>();
@@ -215,11 +217,21 @@ public class G10HM3 {
             weights.add(1L);
         }
 
-        //Run k-means++
-        ArrayList<Vector> C = kmeansPP(dataset, weights, 20, 30);
+        Integer k = Integer.parseInt(args[1]);
+        Integer iter = Integer.parseInt(args[2]);
+        //_____________________________________________________________________
 
-        //Run k-means obj
+
+
+        //Run k-means++________________________________________________________
+        ArrayList<Vector> C = kmeansPP(dataset, weights, k, iter);
+        //_____________________________________________________________________
+
+
+
+        //Run k-means obj______________________________________________________
         double averageDist = kmeansObj(dataset, C);
+        //_____________________________________________________________________
 
         System.out.println("Average distance found is: " + averageDist);
     }

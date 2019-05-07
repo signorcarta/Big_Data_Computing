@@ -65,7 +65,7 @@ public class G10HM3 {
         //_____________________________________________________________________________________________
 
         //Main For cycle_______________________________________________________________________________
-        for(int i=1; i<k; k++){
+        for(int i=1; i<k; i++){
 
             distSum = 0;
 
@@ -120,7 +120,9 @@ public class G10HM3 {
 
         // Contains indexes of cluster belonging, for each point of the dataset
         ArrayList<Integer> partition = new ArrayList<>(P.size());
-
+        for (int i = 0; i < P.size(); i++) {
+            partition.add(0);
+        }
         ///////////////////////////////////////////////////////////////////////////////////////////////
         for(int s=0; s<iter; s++) {
 
@@ -152,7 +154,7 @@ public class G10HM3 {
             for (int i = 0; i < C.size(); i++) {
 
                 long hmany = 0;
-                Vector sum = null;
+                Vector sum = 0;
 
                 for (int j = 0; j < P.size(); j++) {
 

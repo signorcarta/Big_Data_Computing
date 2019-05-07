@@ -52,8 +52,6 @@ public class G10HM3 {
         double randNum;
         double[] probDist;
 
-        long objFunction;
-
         //Generate random number n_____________________________________________________________________
         Random rand = new Random();
         int n = rand.nextInt(P.size());

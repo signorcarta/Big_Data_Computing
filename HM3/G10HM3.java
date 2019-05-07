@@ -8,8 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
 
-import static org.apache.spark.mllib.linalg.Vectors.dense;
-import static org.apache.spark.mllib.linalg.Vectors.sqdist;
+import static org.apache.spark.mllib.linalg.Vectors.*;
 
 public class G10HM3 {
     //__________________________________________________________________________________________________________________
@@ -154,13 +153,13 @@ public class G10HM3 {
             for (int i = 0; i < C.size(); i++) {
 
                 long hmany = 0;
-                Vector sum = 0;
+                Vector sum = zeros(55);
 
                 for (int j = 0; j < P.size(); j++) {
 
                     //access the cluster index of the j-th point of the dataset
                     if (i == partition.get(j)) {
-                        BLAS.axpy(WP.get(j), sum, P.get(j)); //updates sum
+                        BLAS.axpy(WP.get(j), P.get(j), sum); //updates sum
                         hmany = hmany + WP.get(j); //updates elements count
                     }
                 }

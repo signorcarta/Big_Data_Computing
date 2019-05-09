@@ -52,6 +52,8 @@ public class G10HM3 {
         double randNum;
         double[] probDist;
 
+        long objFunction;
+
         //Generate random number n_____________________________________________________________________
         Random rand = new Random();
         int n = rand.nextInt(P.size());
@@ -162,7 +164,8 @@ public class G10HM3 {
                     }
                 }
 
-                BLAS.axpy((1 / hmany), sum, C.get(i)); //new centroid
+                BLAS.axpy(1, sum, C.get(i)); //
+                BLAS.scal(1d/hmany,C.get(i));// new centroid
             }
         }
         ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +190,7 @@ public class G10HM3 {
         {
             for (int j = 0; j < C.size(); j++)
             {
-                dist = Vectors.sqdist(P.get(i), C.get(j));
+                dist =  Math.sqrt(Vectors.sqdist(P.get(i), C.get(j)));
                 if (dist < closest)
                 {
                     closest = dist;

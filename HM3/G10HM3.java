@@ -52,15 +52,12 @@ public class G10HM3 {
         double randNum;
         double[] probDist;
 
-        long objFunction;
-
         //Generate random number n_____________________________________________________________________
         Random rand = new Random();
-        int n = rand.nextInt(P.size());
-        //Random point chosen from P
+        int n = rand.nextInt(P.size()); //Random point chosen from P
         C.add(P.get(n)); //First center selected
-        P.remove(n); //Remove it from the initial set
-        WP.remove(n);
+        P.remove(n); //Remove it from the initial point set
+        WP.remove(n); //Remove it from the initial weights set
         //_____________________________________________________________________________________________
 
         //Main For cycle_______________________________________________________________________________
@@ -115,16 +112,16 @@ public class G10HM3 {
 
 
 
-        //Refine C with Lloyd's algorithm_______________________________________________________________
+        //Refine C with Lloyd's algorithm______________________________________________________________
 
-        // Contains indexes of cluster belonging, for each point of the dataset
-        ArrayList<Integer> partition = new ArrayList<>(P.size());
+        ArrayList<Integer> partition = new ArrayList<>(P.size()); // Contains the indexes of the belonging cluster
+        //Initialization of the vector Partition
         for (int i = 0; i < P.size(); i++) {
             partition.add(0);
         }
-        ///////////////////////////////////////////////////////////////////////////////////////////////
-        for(int s=0; s<iter; s++) {
 
+        //Refining centers using Lloyd for "iter" iterations__________________________________
+        for(int s=0; s<iter; s++) {
 
             //Partition(P, C)___________________________________________________
 
@@ -140,7 +137,7 @@ public class G10HM3 {
                     // Compares previous distance (Point[i] - Center) to current
                     if (thisDist < curDist) {
                         curDist = thisDist;
-                        partition.set(j, i); // Currently assigning the j-th point to cluster number i
+                        partition.set(j, i); // Currently assigning the j-th point to cluster with index i
                     }
 
                 }
@@ -164,13 +161,15 @@ public class G10HM3 {
                     }
                 }
 
-                BLAS.axpy(1, sum, C.get(i)); //
-                BLAS.scal(1d/hmany,C.get(i));// new centroid
+                //Computing new centroid
+                BLAS.axpy(1, sum, C.get(i));
+                BLAS.scal(1d/hmany,C.get(i));
+
             }
         }
-        ///////////////////////////////////////////////////////////////////////////////////////////////
+        //______________________________________________________________________
 
-        //__________________________________________________________________
+        //____________________________________________________________________________________
 
         //_____________________________________________________________________________________________
         return C;
@@ -185,9 +184,10 @@ public class G10HM3 {
         double closest = Double.MAX_VALUE;
         double dist;
 
-        // For every point in P find its nearest center and then sum up into sumDist variable
+        // For every point in P, find its nearest center and then sum up into sumDist variable
         for (int i = 0; i < P.size(); i++)
         {
+            // Scanning all centroids
             for (int j = 0; j < C.size(); j++)
             {
                 dist =  Math.sqrt(Vectors.sqdist(P.get(i), C.get(j)));
@@ -196,8 +196,8 @@ public class G10HM3 {
                     closest = dist;
                 }
             }
-            sumDist += closest;
-            closest = Double.MAX_VALUE;
+            sumDist += closest; //Summing the distance of the closest center
+            closest = Double.MAX_VALUE; //Reset closest for next iteration
         }
         return sumDist/(P.size());
     }
@@ -235,7 +235,7 @@ public class G10HM3 {
         double averageDist = kmeansObj(dataset, C);
         //_____________________________________________________________________
 
-        System.out.println("Average distance found is: " + averageDist);
+        System.out.println("Average distance found is ---> " + averageDist + " <---");
     }
     //__________________________________________________________________________________________________________________
 }

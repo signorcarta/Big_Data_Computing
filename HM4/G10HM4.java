@@ -111,7 +111,7 @@ public class G10HM4
         //------------------------------- ROUND 2 -------------------------------------------------
 
         ArrayList<Tuple2<Vector, Long>> elems = new ArrayList<>(k*L);
-        elems.addAll(coreset.collect());
+        elems.addAll(coreset.collect());// place time here
         ArrayList<Vector> coresetPoints = new ArrayList<>();
         ArrayList<Long> weights = new ArrayList<>();
         for(int i =0; i< elems.size(); ++i)

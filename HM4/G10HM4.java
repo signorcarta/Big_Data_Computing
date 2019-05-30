@@ -351,7 +351,7 @@ public class G10HM4
 
         */
 
-        JavaRDD<Tuple2<Vector,Long>> points = pointset.mapToPair((x) -> {
+        JavaPairRDD<Vector,Long> points = pointset.mapToPair((x) -> { //nota: rimossa la tupla nella dichiarazione, ritornare sempre una tupla
 
                     long sumDist = 0;
                     long closest = Long.MAX_VALUE;

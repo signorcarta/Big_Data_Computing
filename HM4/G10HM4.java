@@ -120,7 +120,7 @@ public class G10HM4
             weights.add(i, elems.get(i)._2);
         }
 
-        ArrayList<Vector> centers = kmeansPP(points, weights, k, iter); /////////VERIFY THIS LINE/////////
+        ArrayList<Vector> centers = kmeansPP(coresetPoints, weights, k, iter); /////////VERIFY THIS LINE/////////
 
         //-----------------------------------------------------------------------------------------
 
@@ -128,7 +128,8 @@ public class G10HM4
 
         //----------------------- ROUND 3: COMPUTE OBJ FUNCTION -----------------------------------
 
-        return kmeansObj(coresetPoints, centers);
+
+        return kmeansObj(points, centers); // TO BE MODIFIED
 
         //-----------------------------------------------------------------------------------------
     }
@@ -324,7 +325,9 @@ public class G10HM4
 
 
     //_________________________________________________________________________________________________________________
-    public static double kmeansObj(ArrayList<Vector> P, ArrayList<Vector> C) {
+    public static double kmeansObj(JavaRDD<Vector> pointset, ArrayList<Vector> centers) {
+
+        /*
         double sumDist = 0;
         double closest = Double.MAX_VALUE;
         double dist;
@@ -345,6 +348,28 @@ public class G10HM4
             closest = Double.MAX_VALUE; //Reset closest for next iteration
         }
         return sumDist/(P.size());
+
+        */
+
+        JavaRDD<Tuple2<Vector,Long>> points = pointset.mapToPair((x) -> {
+
+                    long sumDist = 0;
+                    long closest = Long.MAX_VALUE;
+                    long dist;
+
+                    // Scanning all centroids
+                    for (int j = 0; j < centers.size(); j++)
+                    {
+                        dist = (long) Math.sqrt(Vectors.sqdist(x, centers.get(j)));
+                        if (dist < closest) {
+                            closest = dist;
+                        }
+                    }
+                    return new Tuple2<>(x, closest);
+                });
+
+
+
     }
     //_________________________________________________________________________________________________________________
 }

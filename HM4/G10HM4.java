@@ -297,7 +297,7 @@ public class G10HM4
             for (int i = 0; i < C.size(); i++) {
 
                 long hmany = 0;
-                Vector sum = zeros(P.get(144).size());
+                Vector sum = zeros(P.get(0).size());
 
                 for (int j = 0; j < P.size(); j++) {
 
@@ -330,23 +330,29 @@ public class G10HM4
 
         JavaRDD<Long> points = pointset.mapPartitions((x) -> {
 
-            long sumDist = 0;
-            long closest = Long.MAX_VALUE;
+            ArrayList<Long> closest = new ArrayList<>();
+
             long dist;
 
             // Scanning all centroids
-            for (int j = 0; j < centers.size(); j++)
-            {
-                dist = Math.sqrt(Vectors.sqdist(x, centers.get(j)));
-                if (dist < closest) {
-                    closest = dist;
+            while (x.hasNext()) {
+                long temp = Long.MAX_VALUE;
+                for (int j = 0; j < centers.size(); j++) {
+                    dist = (long) Math.sqrt(Vectors.sqdist(x.next(), centers.get(j)));
+                    if (dist < temp) {
+                        temp = dist;
+                    }
                 }
+                closest.add(temp);
+
             }
-            return closest;
+            return closest.iterator();
         });
 
-        JavaRDD<Long> sumDist = points.reduce(points ->)
-
+        long totalPoints = points.count();
+        long sumDist = points.reduce((x,y) -> x+y);
+        double kmeansObj = sumDist/totalPoints;
+        return kmeansObj;
 
     }
     //_________________________________________________________________________________________________________________

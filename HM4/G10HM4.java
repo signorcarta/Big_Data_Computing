@@ -1,6 +1,7 @@
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.linalg.BLAS;
@@ -129,7 +130,7 @@ public class G10HM4
         //----------------------- ROUND 3: COMPUTE OBJ FUNCTION -----------------------------------
 
 
-        return kmeansObj(points, centers); // TO BE MODIFIED
+        return kmeansObj(pointset, centers); // TO BE MODIFIED
 
         //-----------------------------------------------------------------------------------------
     }
@@ -327,47 +328,24 @@ public class G10HM4
     //_________________________________________________________________________________________________________________
     public static double kmeansObj(JavaRDD<Vector> pointset, ArrayList<Vector> centers) {
 
-        /*
-        double sumDist = 0;
-        double closest = Double.MAX_VALUE;
-        double dist;
+        JavaRDD<Long> points = pointset.mapPartitions((x) -> {
 
-        // For every point in P, find its nearest center and then sum up into sumDist variable
-        for (int i = 0; i < P.size(); i++)
-        {
+            long sumDist = 0;
+            long closest = Long.MAX_VALUE;
+            long dist;
+
             // Scanning all centroids
-            for (int j = 0; j < C.size(); j++)
+            for (int j = 0; j < centers.size(); j++)
             {
-                dist =  Math.sqrt(Vectors.sqdist(P.get(i), C.get(j)));
-                if (dist < closest)
-                {
+                dist = Math.sqrt(Vectors.sqdist(x, centers.get(j)));
+                if (dist < closest) {
                     closest = dist;
                 }
             }
-            sumDist += closest; //Summing the distance of the closest center
-            closest = Double.MAX_VALUE; //Reset closest for next iteration
-        }
-        return sumDist/(P.size());
+            return closest;
+        });
 
-        */
-
-        JavaPairRDD<Vector,Long> points = pointset.mapToPair((x) -> { //nota: rimossa la tupla nella dichiarazione, ritornare sempre una tupla
-
-                    long sumDist = 0;
-                    long closest = Long.MAX_VALUE;
-                    long dist;
-
-                    // Scanning all centroids
-                    for (int j = 0; j < centers.size(); j++)
-                    {
-                        dist = (long) Math.sqrt(Vectors.sqdist(x, centers.get(j)));
-                        if (dist < closest) {
-                            closest = dist;
-                        }
-                    }
-                    return new Tuple2<>(x, closest);
-                });
-
+        JavaRDD<Long> sumDist = points.reduce(points ->)
 
 
     }

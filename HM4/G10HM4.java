@@ -84,6 +84,7 @@ public class G10HM4
         //
 
         //------------------------------- ROUND 1 -------------------------------------------------
+        long start1 = System.currentTimeMillis();
 
         JavaRDD<Tuple2<Vector,Long>> coreset = pointset.mapPartitions(x ->
         {
@@ -111,7 +112,13 @@ public class G10HM4
         //------------------------------- ROUND 2 -------------------------------------------------
 
         ArrayList<Tuple2<Vector, Long>> elems = new ArrayList<>(k*L);
-        elems.addAll(coreset.collect());// place time here
+        elems.addAll(coreset.collect());
+
+        // place time here
+        long end1 = System.currentTimeMillis();
+        System.out.println("Round 1 elapsed time " + (end1 - start1) + " ms" + "\n");
+        long start2 = System.currentTimeMillis();
+
         ArrayList<Vector> coresetPoints = new ArrayList<>();
         ArrayList<Long> weights = new ArrayList<>();
         for(int i =0; i< elems.size(); ++i)
@@ -122,12 +129,16 @@ public class G10HM4
 
         ArrayList<Vector> centers = kmeansPP(coresetPoints, weights, k, iter); /////////VERIFY THIS LINE/////////
 
+        long end2 = System.currentTimeMillis();
+        System.out.println("Round 3 elapsed time " + (end2 - start2) + " ms" + "\n");
+
+
+
         //-----------------------------------------------------------------------------------------
 
 
 
         //----------------------- ROUND 3: COMPUTE OBJ FUNCTION -----------------------------------
-
 
         return kmeansObj(pointset, centers);
 
@@ -331,6 +342,7 @@ public class G10HM4
     //_________________________________________________________________________________________________________________
     public static double kmeansObj(JavaRDD<Vector> pointset, ArrayList<Vector> centers) {
 
+        long start3 = System.currentTimeMillis();
         JavaRDD<Long> points = pointset.mapPartitions((x) -> {
 
             ArrayList<Long> closest = new ArrayList<>();
@@ -353,9 +365,10 @@ public class G10HM4
             return closest.iterator();
         });
 
-        long totalPoints = points.count();
         long sumDist = points.reduce((x,y) -> x+y);
-
+        long totalPoints = points.count();
+        long end3 = System.currentTimeMillis();
+        System.out.println("Round 3 elapsed time " + (end3 - start3) + " ms" + "\n");
         return sumDist/totalPoints;
 
     }

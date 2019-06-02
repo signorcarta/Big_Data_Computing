@@ -1,7 +1,6 @@
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.linalg.BLAS;
@@ -54,7 +53,7 @@ public class G10HM4
         Logger.getLogger("org").setLevel(Level.OFF);
         Logger.getLogger("akka").setLevel(Level.OFF);
 
-        //------- SETTING THE SPARK CONTEXT      
+        //------- SETTING THE SPARK CONTEXT
         SparkConf conf = new SparkConf(true).setAppName("kmedian new approach");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
@@ -65,8 +64,8 @@ public class G10HM4
                 .cache();
         long N = pointset.count();
         System.out.println("Number of points is : " + N);
-        System.out.println("Number of clusters is : " + k);
-        System.out.println("Number of parts is : " + L);
+        System.out.println("Number of clusters is :  " + k);
+        System.out.println("Number of parts is :     " + L);
         System.out.println("Number of iterations is : " + iter);
 
         //------- SOLVING THE PROBLEM ------------
@@ -81,7 +80,7 @@ public class G10HM4
     public static Double MR_kmedian(JavaRDD<Vector> pointset, int k, int L, int iter)
     {
         //
-        // --- ADD INSTRUCTIONS TO TAKE AND PRINT TIMES OF ROUNDS 1, 2 and 3 
+        // --- ADD INSTRUCTIONS TO TAKE AND PRINT TIMES OF ROUNDS 1, 2 and 3
         //
 
         //------------------------------- ROUND 1 -------------------------------------------------
@@ -130,7 +129,7 @@ public class G10HM4
         //----------------------- ROUND 3: COMPUTE OBJ FUNCTION -----------------------------------
 
 
-        return kmeansObj(pointset, centers); // TO BE MODIFIED
+        return kmeansObj(pointset, centers);
 
         //-----------------------------------------------------------------------------------------
     }
@@ -190,10 +189,14 @@ public class G10HM4
     public static ArrayList<Vector> kmeansPP( ArrayList<Vector> Pi, ArrayList<Long> WPi, int k, int iter){
 
         //Initializations
-        ArrayList<Vector> P = new ArrayList<Vector>(Pi); //Dataset
+        ArrayList<Vector> P = new ArrayList<Vector>(Pi);//Dataset
+        ArrayList<Vector> P2 = new ArrayList<Vector>(Pi);//Dataset copy
         ArrayList<Long> WP = new ArrayList<Long>(WPi); //Array of weights
+        ArrayList<Long> WP2 = new ArrayList<Long>(WPi); //Array of weights
         ArrayList<Vector> C = new ArrayList<Vector>(k);//Equivalent to S in the slides
         ArrayList<Double> curMinDist = new ArrayList<>();
+
+        int size = P.get(0).size();
 
         double distSum = 0;
         double randNum;
@@ -261,9 +264,9 @@ public class G10HM4
 
         //Refine C with Lloyd's algorithm______________________________________________________________
 
-        ArrayList<Integer> partition = new ArrayList<>(P.size()); // Contains the indexes of the belonging cluster
+        ArrayList<Integer> partition = new ArrayList<>(P2.size()); // Contains the indexes of the belonging cluster
         //Initialization of the vector Partition
-        for (int i = 0; i < P.size(); i++) {
+        for (int i = 0; i < P2.size(); i++) {
             partition.add(0);
         }
 
@@ -273,13 +276,13 @@ public class G10HM4
             //Partition(P, C)___________________________________________________
 
             //Cycling over all points considering i-th center
-            for (int j = 0; j < P.size(); j++) {
+            for (int j = 0; j < P2.size(); j++) {
 
                 long curDist = Long.MAX_VALUE;
 
                 // Cyclying over all centers
                 for (int i = 0; i < C.size(); i++) {
-                    long thisDist = (long) Vectors.sqdist(C.get(i), P.get(j));
+                    long thisDist = (long) Vectors.sqdist(C.get(i), P2.get(j));
 
                     // Compares previous distance (Point[i] - Center) to current
                     if (thisDist < curDist) {
@@ -297,14 +300,14 @@ public class G10HM4
             for (int i = 0; i < C.size(); i++) {
 
                 long hmany = 0;
-                Vector sum = zeros(P.get(0).size());
+                Vector sum = zeros(size);
 
-                for (int j = 0; j < P.size(); j++) {
+                for (int j = 0; j < P2.size(); j++) {
 
                     //access the cluster index of the j-th point of the dataset
                     if (i == partition.get(j)) {
-                        BLAS.axpy(WP.get(j), P.get(j), sum); //updates sum
-                        hmany = hmany + WP.get(j); //updates elements count
+                        BLAS.axpy(WP2.get(j), P2.get(j), sum); //updates sum
+                        hmany = hmany + WP2.get(j); //updates elements count
                     }
                 }
 
@@ -336,9 +339,10 @@ public class G10HM4
 
             // Scanning all centroids
             while (x.hasNext()) {
+                Vector point = x.next();
                 long temp = Long.MAX_VALUE;
                 for (int j = 0; j < centers.size(); j++) {
-                    dist = (long) Math.sqrt(Vectors.sqdist(x.next(), centers.get(j)));
+                    dist = (long) Math.sqrt(Vectors.sqdist(point, centers.get(j)));
                     if (dist < temp) {
                         temp = dist;
                     }
@@ -351,8 +355,8 @@ public class G10HM4
 
         long totalPoints = points.count();
         long sumDist = points.reduce((x,y) -> x+y);
-        double kmeansObj = sumDist/totalPoints;
-        return kmeansObj;
+
+        return sumDist/totalPoints;
 
     }
     //_________________________________________________________________________________________________________________

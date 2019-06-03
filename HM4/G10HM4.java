@@ -130,7 +130,7 @@ public class G10HM4
         ArrayList<Vector> centers = kmeansPP(coresetPoints, weights, k, iter); /////////VERIFY THIS LINE/////////
 
         double end2 = System.currentTimeMillis();
-        System.out.println("Round 3 elapsed time " + (end2 - start2) + " ms" + "\n");
+        System.out.println("Round 2 elapsed time " + (end2 - start2) + " ms" + "\n");
 
 
 
@@ -343,16 +343,16 @@ public class G10HM4
     public static double kmeansObj(JavaRDD<Vector> pointset, ArrayList<Vector> centers) {
 
         double start3 = System.currentTimeMillis();
-        JavaRDD<Long> points = pointset.mapPartitions((x) -> {
+        JavaRDD<Double> points = pointset.mapPartitions((x) -> {
 
-            ArrayList<Long> closest = new ArrayList<>();
+            ArrayList<Double> closest = new ArrayList<>();
 
-            long dist;
+            double dist;
 
             // Scanning all centroids
             while (x.hasNext()) {
                 Vector point = x.next();
-                long temp = Long.MAX_VALUE;
+                double temp = Long.MAX_VALUE;
                 for (int j = 0; j < centers.size(); j++) {
                     dist = Math.sqrt(Vectors.sqdist(point, centers.get(j)));
                     if (dist < temp) {
@@ -365,7 +365,7 @@ public class G10HM4
             return closest.iterator();
         });
 
-        long sumDist = points.reduce((x,y) -> x+y);
+        double sumDist = points.reduce((x,y) -> x+y);
         long totalPoints = points.count();
         double end3 = System.currentTimeMillis();
         System.out.println("Round 3 elapsed time " + (end3 - start3) + " ms" + "\n");

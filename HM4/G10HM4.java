@@ -63,9 +63,9 @@ public class G10HM4
                 .repartition(L)
                 .cache();
         long N = pointset.count();
-        System.out.println("Number of points is : " + N);
-        System.out.println("Number of clusters is :  " + k);
-        System.out.println("Number of parts is :     " + L);
+        System.out.println("\nNumber of points is : " + N);
+        System.out.println("Number of clusters is :   " + k);
+        System.out.println("Number of parts is :      " + L);
         System.out.println("Number of iterations is : " + iter);
 
         //------- SOLVING THE PROBLEM ------------
@@ -79,12 +79,9 @@ public class G10HM4
     //_________________________________________________________________________________________________________________
     public static Double MR_kmedian(JavaRDD<Vector> pointset, int k, int L, int iter)
     {
-        //
-        // --- ADD INSTRUCTIONS TO TAKE AND PRINT TIMES OF ROUNDS 1, 2 and 3
-        //
 
         //------------------------------- ROUND 1 -------------------------------------------------
-        double start1 = System.currentTimeMillis();
+        double start1 = System.currentTimeMillis();                                                            //Start 1
 
         JavaRDD<Tuple2<Vector,Long>> coreset = pointset.mapPartitions(x ->
         {
@@ -115,9 +112,9 @@ public class G10HM4
         elems.addAll(coreset.collect());
 
         // place time here
-        double end1 = System.currentTimeMillis();
-        System.out.println("Round 1 elapsed time " + (end1 - start1) + " ms" + "\n");
-        double start2 = System.currentTimeMillis();
+        double end1 = System.currentTimeMillis();                                                                //End 1
+        System.out.println("\nRound 1 elapsed time: " + (end1 - start1) + " ms" + "\n");
+        double start2 = System.currentTimeMillis();                                                            //Start 2
 
         ArrayList<Vector> coresetPoints = new ArrayList<>();
         ArrayList<Long> weights = new ArrayList<>();
@@ -127,10 +124,10 @@ public class G10HM4
             weights.add(i, elems.get(i)._2);
         }
 
-        ArrayList<Vector> centers = kmeansPP(coresetPoints, weights, k, iter); /////////VERIFY THIS LINE/////////
+        ArrayList<Vector> centers = kmeansPP(coresetPoints, weights, k, iter);
 
-        double end2 = System.currentTimeMillis();
-        System.out.println("Round 2 elapsed time " + (end2 - start2) + " ms" + "\n");
+        double end2 = System.currentTimeMillis();                                                                //End 2
+        System.out.println("Round 2 elapsed time: " + (end2 - start2) + " ms" + "\n");
 
 
 
@@ -342,7 +339,7 @@ public class G10HM4
     //_________________________________________________________________________________________________________________
     public static double kmeansObj(JavaRDD<Vector> pointset, ArrayList<Vector> centers) {
 
-        double start3 = System.currentTimeMillis();
+        double start3 = System.currentTimeMillis();                                                            //Start 3
         JavaRDD<Double> points = pointset.mapPartitions((x) -> {
 
             ArrayList<Double> closest = new ArrayList<>();
@@ -367,8 +364,10 @@ public class G10HM4
 
         double sumDist = points.reduce((x,y) -> x+y);
         long totalPoints = points.count();
-        double end3 = System.currentTimeMillis();
-        System.out.println("Round 3 elapsed time " + (end3 - start3) + " ms" + "\n");
+
+        double end3 = System.currentTimeMillis();                                                                //End 3
+        System.out.println("Round 3 elapsed time: " + (end3 - start3) + " ms\n");
+
         return sumDist/totalPoints;
 
     }

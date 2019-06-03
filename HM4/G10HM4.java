@@ -84,7 +84,7 @@ public class G10HM4
         //
 
         //------------------------------- ROUND 1 -------------------------------------------------
-        long start1 = System.currentTimeMillis();
+        double start1 = System.currentTimeMillis();
 
         JavaRDD<Tuple2<Vector,Long>> coreset = pointset.mapPartitions(x ->
         {
@@ -115,9 +115,9 @@ public class G10HM4
         elems.addAll(coreset.collect());
 
         // place time here
-        long end1 = System.currentTimeMillis();
+        double end1 = System.currentTimeMillis();
         System.out.println("Round 1 elapsed time " + (end1 - start1) + " ms" + "\n");
-        long start2 = System.currentTimeMillis();
+        double start2 = System.currentTimeMillis();
 
         ArrayList<Vector> coresetPoints = new ArrayList<>();
         ArrayList<Long> weights = new ArrayList<>();
@@ -129,7 +129,7 @@ public class G10HM4
 
         ArrayList<Vector> centers = kmeansPP(coresetPoints, weights, k, iter); /////////VERIFY THIS LINE/////////
 
-        long end2 = System.currentTimeMillis();
+        double end2 = System.currentTimeMillis();
         System.out.println("Round 3 elapsed time " + (end2 - start2) + " ms" + "\n");
 
 
@@ -342,7 +342,7 @@ public class G10HM4
     //_________________________________________________________________________________________________________________
     public static double kmeansObj(JavaRDD<Vector> pointset, ArrayList<Vector> centers) {
 
-        long start3 = System.currentTimeMillis();
+        double start3 = System.currentTimeMillis();
         JavaRDD<Long> points = pointset.mapPartitions((x) -> {
 
             ArrayList<Long> closest = new ArrayList<>();
@@ -354,7 +354,7 @@ public class G10HM4
                 Vector point = x.next();
                 long temp = Long.MAX_VALUE;
                 for (int j = 0; j < centers.size(); j++) {
-                    dist = (long) Math.sqrt(Vectors.sqdist(point, centers.get(j)));
+                    dist = Math.sqrt(Vectors.sqdist(point, centers.get(j)));
                     if (dist < temp) {
                         temp = dist;
                     }
@@ -367,7 +367,7 @@ public class G10HM4
 
         long sumDist = points.reduce((x,y) -> x+y);
         long totalPoints = points.count();
-        long end3 = System.currentTimeMillis();
+        double end3 = System.currentTimeMillis();
         System.out.println("Round 3 elapsed time " + (end3 - start3) + " ms" + "\n");
         return sumDist/totalPoints;
 

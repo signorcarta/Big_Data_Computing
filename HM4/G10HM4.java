@@ -320,8 +320,9 @@ public class G10HM4
                 }
 
                 //Computing new centroid
-                BLAS.axpy(1, sum, C.get(i));
+                BLAS.copy( sum, C.get(i));
                 BLAS.scal(1d/hmany,C.get(i));
+
 
             }
         }

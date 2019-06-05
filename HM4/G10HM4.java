@@ -202,6 +202,7 @@ public class G10HM4
         ArrayList<Long> WP = new ArrayList<Long>(WPi); //Array of weights
         ArrayList<Long> WP2 = new ArrayList<Long>(WPi); //Array of weights
         ArrayList<Vector> C = new ArrayList<Vector>(k);//Equivalent to S in the slides
+       //ArrayList<Vector> C_clone = new ArrayList<Vector>(k);
         ArrayList<Double> curMinDist = new ArrayList<>();
 
         int size = P.get(0).size();
@@ -286,11 +287,11 @@ public class G10HM4
             //Cycling over all points considering i-th center
             for (int j = 0; j < P2.size(); j++) {
 
-                long curDist = Long.MAX_VALUE;
+                double curDist = Long.MAX_VALUE;
 
                 // Cyclying over all centers
                 for (int i = 0; i < C.size(); i++) {
-                    long thisDist = (long) Vectors.sqdist(C.get(i), P2.get(j));
+                    double thisDist = Vectors.sqdist(C.get(i), P2.get(j));
 
                     // Compares previous distance (Point[i] - Center) to current
                     if (thisDist < curDist) {
@@ -304,7 +305,11 @@ public class G10HM4
 
 
             //Centroid update___________________________________________________
-
+            /*
+            for (int i = 0; i < C.size(); i++) {
+                C_clone.set(i, zeros(size)); //Initializing C_clone to all zero vectors
+            }
+            */
             for (int i = 0; i < C.size(); i++) {
 
                 long hmany = 0;
@@ -320,9 +325,9 @@ public class G10HM4
                 }
 
                 //Computing new centroid
-                BLAS.copy( sum, C.get(i));
-                BLAS.scal(1d/hmany,C.get(i));
-
+                BLAS.scal(1d/hmany,sum);
+                C.set(i,sum);
+                //BLAS.copy(C_clone.get(i), C.get(i));
 
             }
         }

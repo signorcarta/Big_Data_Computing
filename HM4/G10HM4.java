@@ -200,9 +200,8 @@ public class G10HM4
         ArrayList<Vector> P = new ArrayList<Vector>(Pi);//Dataset
         ArrayList<Vector> P2 = new ArrayList<Vector>(Pi);//Dataset copy
         ArrayList<Long> WP = new ArrayList<Long>(WPi); //Array of weights
-        ArrayList<Long> WP2 = new ArrayList<Long>(WPi); //Array of weights
+        ArrayList<Long> WP2 = new ArrayList<Long>(WPi); //Array of weights (copy of the above array)
         ArrayList<Vector> C = new ArrayList<Vector>(k);//Equivalent to S in the slides
-       //ArrayList<Vector> C_clone = new ArrayList<Vector>(k);
         ArrayList<Double> curMinDist = new ArrayList<>();
 
         int size = P.get(0).size();
@@ -305,11 +304,7 @@ public class G10HM4
 
 
             //Centroid update___________________________________________________
-            /*
-            for (int i = 0; i < C.size(); i++) {
-                C_clone.set(i, zeros(size)); //Initializing C_clone to all zero vectors
-            }
-            */
+            
             for (int i = 0; i < C.size(); i++) {
 
                 long hmany = 0;
@@ -327,8 +322,7 @@ public class G10HM4
                 //Computing new centroid
                 BLAS.scal(1d/hmany,sum);
                 C.set(i,sum);
-                //BLAS.copy(C_clone.get(i), C.get(i));
-
+                
             }
         }
         //______________________________________________________________________
